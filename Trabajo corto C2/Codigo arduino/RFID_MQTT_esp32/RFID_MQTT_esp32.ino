@@ -30,9 +30,6 @@ void printArray(byte *buffer, byte bufferSize) {
    }
 }
 
-
-
-
 // Conexión WiFi
 /*const char* SSID = "POCOX3";
 const char* SSID_PASSWORD = "pocox5597";*/
@@ -47,11 +44,11 @@ const char* SSID_PASSWORD = "gatoconbotas";
 //const char* SSID_PASSWORD = "12345678";
 
 // Conexión con mosquitto Broker
-//#define MQTT_HOST IPAddress(192, 168, 0, 53) 
+//#define MQTT_HOST IPAddress(192, 168, 0, 53)
 // host movil
 #define MQTT_HOST "192.168.43.233"
 //#define MQTT_HOST "192.168.137.198"
-//#define MQTT_HOST "192.168.0.53" 
+//#define MQTT_HOST "192.168.0.53"
 #define MQTT_PORT 1883
 
 //__________________MQTT Topics____________________________
@@ -59,22 +56,18 @@ const char* SSID_PASSWORD = "gatoconbotas";
 #define MQTT_SUB_OUT_TEMP "esp32/OutputControl"
 #define MQTT_SUB_DOOR "esp32/DoorControl"
 
-
 const int OutPin = 22;
 const int DoorPin = 21;
 
-
-
-
 //Creación de un objeto AsyncMqttClient
 AsyncMqttClient mqttClient;
-//temporizadores para reconexión 
+//temporizadores para reconexión
 TimerHandle_t mqttReconnectTimer;
 TimerHandle_t wifiReconnectTimer;
 
 // variables para monitorear el tiempo entre lecturas
-unsigned long previousMillis = 0;   
-const long interval = 10000;  
+unsigned long previousMillis = 0;
+const long interval = 10000;
 
 void connectToWifi() {
   Serial.println("Connecting to Wi-Fi...");
@@ -97,7 +90,7 @@ void WiFiEvent(WiFiEvent_t event) {
       break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
       Serial.println("WiFi lost connection");
-      xTimerStop(mqttReconnectTimer, 0); 
+      xTimerStop(mqttReconnectTimer, 0);
       xTimerStart(wifiReconnectTimer, 0);
       break;
   }
@@ -113,10 +106,10 @@ void onMqttConnect(bool sessionPresent) {
 
   //suscripcion para control de la puerta
   uint16_t packetIdSub2 = mqttClient.subscribe(MQTT_SUB_DOOR, 2);
-  Serial.print("Subscribing Puerta at QoS 2, packetId: ");
+  Serial.print("Subscribing  at QoS 2, packetId: ");
   Serial.println(packetIdSub2);
 
-  
+
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
@@ -159,33 +152,30 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
    Serial.print("este es el nombre del topic: ");
    Serial.println(TopicName);
 
-  
+
   String messageTemp;
   for (int i = 0; i < len; i++) {
     messageTemp += (char)payload[i];
   }
     Serial.print("Message: ");
     Serial.println(messageTemp);
-  
+
   if (messageTemp == "ON"){
-  digitalWrite(OutPin, HIGH); 
-  Serial.println("Refrigeración encendida");
+  digitalWrite(OutPin, HIGH);
+  Serial.println("Led encendido");
   }
   if (messageTemp == "OFF"){
-  digitalWrite(OutPin, LOW); 
-  Serial.println("Refrigeración apagada");
+  digitalWrite(OutPin, LOW);
+  Serial.println("Led apagado");
   }
   if (messageTemp == "OPEN"){
-  digitalWrite(DoorPin, HIGH); 
-  Serial.println("Bodega abierta");
+  digitalWrite(DoorPin, HIGH);
+  Serial.println("Puerta abierta");
   }
   if (messageTemp == "CLOSE"){
-  digitalWrite(DoorPin, LOW); 
-  Serial.println("Bodega cerrada");
+  digitalWrite(DoorPin, LOW);
+  Serial.println("Puerta cerrada");
   }
-
-
-  
 }
 
 //_____________funcion para validación de UID____________________
@@ -202,7 +192,6 @@ bool isEqualArray(uint8_t* arrayA, uint8_t* arrayB, uint8_t length)
   return true;
 }
 //___________________________________________________
-
 
 
 void rfid(){
@@ -246,13 +235,11 @@ void setup() {
   mqttClient.onSubscribe(onMqttSubscribe);
   mqttClient.onUnsubscribe(onMqttUnsubscribe);
   mqttClient.onMessage(onMqttMessage);
-  // puerta mqttClient.onMessage(onMqttMessage2);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   connectToWifi();
   delay(5000);
-  
-}
 
+}
 void loop() {
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval) {
@@ -261,16 +248,7 @@ void loop() {
 
     unsigned long currentMillis = millis();
     /*
-  
-    // Publica un mensaje MQTT en el topic esp32/dht/temperature
-    uint16_t packetIdPub1 = mqttClient.publish(MQTT_PUB_TEMP_DHT, 0, true, String(temperature_DHT).c_str());                            
-    Serial.printf("Publishing on topic %s at QoS 1, packetId: %i", MQTT_PUB_TEMP_DHT, packetIdPub1);
-    Serial.printf("Message: %.2f \n", temperature_DHT);
 
-    // Publica un mensaje MQTT en el topic esp32/dht/humidity
-    uint16_t packetIdPub2 = mqttClient.publish(MQTT_PUB_HUM_DHT, 1, true, String(humidity_DHT).c_str());                            
-    Serial.printf("Publishing on topic %s at QoS 1, packetId %i: ", MQTT_PUB_HUM_DHT, packetIdPub2);
-    Serial.printf("Message: %.2f \n", humidity_DHT);*/
   }
   //======================RFID=========================================
   boolean LeeTarjeta; //Variable para almacenar la detección de una tarjeta
@@ -292,30 +270,29 @@ void loop() {
     {
       Serial.println("Franklin Conectado");
       // Publica un mensaje MQTT en el topic  "esp32/DoorControl"
-    uint16_t packetIdPub3 = mqttClient.publish(MQTT_SUB_DOOR, 0, true, String("OPEN").c_str());                            
+    uint16_t packetIdPub3 = mqttClient.publish(MQTT_SUB_DOOR, 0, true, String("OPEN").c_str());
     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i", MQTT_SUB_DOOR, packetIdPub3);
     Serial.println("");
-    //Serial.printf("Message: %.2f \n", temperature_DHT);
-      //delay(5000);
+
       // Publica un mensaje MQTT en el topic  "esp32/EPN532"
-    uint16_t packetIdPub4 = mqttClient.publish(MQTT_PUB_UID, 0, true, String("Franklin").c_str());                            
+    uint16_t packetIdPub4 = mqttClient.publish(MQTT_PUB_UID, 0, true, String("Franklin").c_str());
     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i", MQTT_PUB_UID, packetIdPub4);
     Serial.println("");
     }
     else if (isEqualArray(uid, jdUID, LongitudUID)){
       // Publica un mensaje MQTT en el topic  "esp32/DoorControl"
-    uint16_t packetIdPub3 = mqttClient.publish(MQTT_SUB_DOOR, 0, true, String("OPEN").c_str());                            
+    uint16_t packetIdPub3 = mqttClient.publish(MQTT_SUB_DOOR, 0, true, String("OPEN").c_str());
     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i", MQTT_SUB_DOOR, packetIdPub3);
     Serial.println("");
-    //Serial.printf("Message: %.2f \n", temperature_DHT);
+
       // Publica un mensaje MQTT en el topic  "esp32/EPN532"
-    uint16_t packetIdPub4 = mqttClient.publish(MQTT_PUB_UID, 0, true, String("Juan D").c_str());                            
+    uint16_t packetIdPub4 = mqttClient.publish(MQTT_PUB_UID, 0, true, String("Juan D").c_str());
     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i", MQTT_PUB_UID, packetIdPub4);
     Serial.println("");
     }
     else if(isEqualArray(uid, llavero, LongitudUID)){
       // Publica un mensaje MQTT en el topic  "esp32/OutControl"
-    uint16_t packetIdPub6 = mqttClient.publish(MQTT_SUB_OUT_TEMP, 0, true, String("ON").c_str());                            
+    uint16_t packetIdPub6 = mqttClient.publish(MQTT_SUB_OUT_TEMP, 0, true, String("ON").c_str());
     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i", MQTT_SUB_OUT_TEMP, packetIdPub6);
     Serial.println("");
     //Serial.printf("Message: %.2f \n", temperature_DHT);
@@ -325,7 +302,7 @@ void loop() {
     {
       Serial.println("Tarjeta invalida");
       // Publica un mensaje MQTT en el topic  "esp32/DoorControl"
-    uint16_t packetIdPub5 = mqttClient.publish(MQTT_SUB_DOOR, 0, true, String("Acceso denegado").c_str());                            
+    uint16_t packetIdPub5 = mqttClient.publish(MQTT_SUB_DOOR, 0, true, String("Acceso denegado").c_str());
     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i", MQTT_SUB_DOOR, packetIdPub5);
     Serial.println("");
   }
@@ -334,12 +311,8 @@ void loop() {
   else
   {
     Serial.println("Se agotó el tiempo de espera de una tarjeta");
-    
+
   }
   //======================RFID=========================================
 
-
- 
-
-  
 }
