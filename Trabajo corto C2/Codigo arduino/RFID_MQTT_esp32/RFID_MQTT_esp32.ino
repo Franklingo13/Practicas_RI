@@ -56,8 +56,8 @@ const char* SSID_PASSWORD = "gatoconbotas";
 #define MQTT_SUB_OUT_TEMP "esp32/OutputControl"
 #define MQTT_SUB_DOOR "esp32/DoorControl"
 
-const int OutPin = 22;
-const int DoorPin = 21;
+const int OutPin = 4;
+const int DoorPin = 16;
 
 //Creación de un objeto AsyncMqttClient
 AsyncMqttClient mqttClient;
