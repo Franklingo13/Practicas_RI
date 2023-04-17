@@ -3,7 +3,11 @@
 BluetoothA2DPSink a2dp_sink;
 
 void setup() {
-  # A2DS Sink empleando el DAC interno
+  Serial.begin(115200);
+  // intento de poder leer el nombre de la canción
+//  a2dp_sink.set_on_data_received(data_received_callback);
+  a2dp_sink.set_stream_reader(read_data_stream);
+  //A2DS Sink empleando el DAC interno
   static const i2s_config_t i2s_config = {
         .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN),
         .sample_rate = 44100, // corrected by info from bluetooth
@@ -21,6 +25,17 @@ void setup() {
 
 }
 
+//void data_received_callback() {
+//  Serial.println("Data packet received");
+//}
+
+void read_data_stream(const uint8_t *data, uint32_t length)
+{
+  int16_t *samples = (int16_t*) data;
+  uint32_t sample_count = length/2;
+  Serial.println(*samples);
+  // Do something with the data packet
+}
 void loop() {
   // put your main code here, to run repeatedly:
 
