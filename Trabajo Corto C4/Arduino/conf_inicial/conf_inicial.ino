@@ -1,18 +1,27 @@
 #include "BluetoothA2DPSink.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
+// PANTALLA OLED 
+#define ANCHO 128
+#define ALTO 64
+#define SCL_INDEX 0x00
+#define SCL_TIME 0x01
+#define SCL_FREQUENCY 0x02
+#define SCL_PLOT 0x03
+#define OLED_RESET -1 
+Adafruit_SSD1306 oled(ANCHO,ALTO, &Wire, OLED_RESET);
 BluetoothA2DPSink a2dp_sink;
-bool is_active = true;
 String titulo;
 String estado;
 String t_play;
-void avrc_metadata_callback(uint8_t data1, const uint8_t *data2) {
-  
+
+
+// funcion para lectura de metadatos
+void avrc_metadata_callback(uint8_t data1, const uint8_t *data2) { 
   Serial.printf("AVRC metadata rsp: attribute id 0x%x, %s\n", data1, data2);
     //convertir a string *data2
   String atributo = String((char*)data2);
-  //Serial.println(s);
-  //Serial.println(s.length());
-  //Serial.println(s.substring(0, s.length()-1));
 
   //condicionales para identificar el atributo
     if (data1 == 0x01){
@@ -30,17 +39,31 @@ void avrc_metadata_callback(uint8_t data1, const uint8_t *data2) {
       t_play = atributo;
       Serial.println(t_play);
     }
-//  Serial.printf("Reproduciendo: ");
-//  Serial.println(data1);
+
     // condicionales para identificar el estado
     if (a2dp_sink.get_audio_state()==ESP_A2D_AUDIO_STATE_STARTED){
       //Serial.println("play");
-      estado = "Play";
+      estado = "Encendido";
       //a2dp_sink.play();
     } else {
       //Serial.println("pause");
       estado = "Pause";
     }
+
+    //IMPRIMIR VALORES EN OLED//
+      oled.clearDisplay();
+      oled.setTextColor(WHITE); //NO MULTIPLES COLORES
+      oled.setCursor(0,0); //ELIGE COORDENADAS PARA COMENEZAR A ESCRIBIR
+      oled.setTextSize(1.5); //TAMAÑO DEL TEXTO
+      oled.print("Reproduciendo: ");
+      oled.setCursor(8,20); // NUEVAS COORDENADAS
+      oled.setTextSize(1.95);   //TAMAÑO DE TEXTO
+      oled.print(titulo);
+      oled.setCursor(10,55); // NUEVAS COORDENADAS
+      oled.setTextSize(1.7);   //TAMAÑO DE 
+      oled.print("Estado: ");
+      oled.print(estado);
+      oled.display(); 
 }
 
 void setup() {
@@ -62,8 +85,10 @@ void setup() {
     a2dp_sink.start("MyMusic");
     
     a2dp_sink.set_avrc_metadata_callback(avrc_metadata_callback);
-    //a2dp_sink.set_avrc_metadata_attribute_mask(ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_PLAYING_TIME);
-
+    //a2dp_sink.set_stream_reader(read_data_stream);
+    /* INICIAR OLED */
+    oled.begin(SSD1306_SWITCHCAPVCC,0x3C);
+    oled.clearDisplay();
 }
 
 
@@ -71,13 +96,18 @@ void read_data_stream(const uint8_t *data, uint32_t length)
 {
   int16_t *samples = (int16_t*) data;
   uint32_t sample_count = length/2;
-  Serial.println(*samples);
-  // Do something with the data packet
+  //Serial.println(*samples);
+  if (sample_count > 0){
+      //Serial.println("Titulo: ");
+      estado = "play";
+    }else{
+      estado = "pause";
+    }
 }
 
 
-
 void loop() {
+
 
  
 
