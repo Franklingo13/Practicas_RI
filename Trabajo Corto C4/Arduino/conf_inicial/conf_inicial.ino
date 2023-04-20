@@ -1,6 +1,7 @@
 #include "BluetoothA2DPSink.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Wire.h>
 
 // PANTALLA OLED 
 #define ANCHO 128
@@ -10,6 +11,8 @@
 #define SCL_FREQUENCY 0x02
 #define SCL_PLOT 0x03
 #define OLED_RESET -1 
+#define I2C_SDA 22
+#define I2C_SCL 21
 Adafruit_SSD1306 oled(ANCHO,ALTO, &Wire, OLED_RESET);
 BluetoothA2DPSink a2dp_sink;
 String titulo;
@@ -68,6 +71,7 @@ void avrc_metadata_callback(uint8_t data1, const uint8_t *data2) {
 
 void setup() {
   Serial.begin(115200);
+  Wire.begin(I2C_SDA, I2C_SCL);
   //A2DS Sink empleando el DAC interno
   static const i2s_config_t i2s_config = {
         .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN),
@@ -82,7 +86,7 @@ void setup() {
     };
     //set_avrc_metadata_attribute_mask(ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_PLAYING_TIME);
     a2dp_sink.set_i2s_config(i2s_config);
-    a2dp_sink.start("MyMusic");
+    a2dp_sink.start("Grupo4");
     
     a2dp_sink.set_avrc_metadata_callback(avrc_metadata_callback);
     //a2dp_sink.set_stream_reader(read_data_stream);
